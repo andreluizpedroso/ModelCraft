@@ -20,4 +20,4 @@ Importancia alta nao prova causalidade. Ela indica que a variavel ajudou o model
 Em churn de telecom, variaveis como tipo de contrato, tempo como cliente, suporte tecnico e valor mensal costumam ser fortes porque representam atrito, comprometimento contratual e percepcao de valor.
 
 ## SHAP
-SHAP nao foi gerado nesta execucao. Motivo: `ModuleNotFoundError: No module named 'shap'`. A interpretabilidade principal usa importancia de features/permutacao.
+SHAP foi calculado com amostras de treino/teste transformadas pelo pipeline e salvo em `images/shap_beeswarm.png`.

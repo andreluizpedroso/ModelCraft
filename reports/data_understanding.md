@@ -31,25 +31,25 @@ Shape: 4000 linhas x 21 colunas
 |                  |   0 |
 |:-----------------|----:|
 | TotalCharges     |  40 |
-| customerID       |   0 |
-| DeviceProtection |   0 |
-| MonthlyCharges   |   0 |
-| PaymentMethod    |   0 |
-| PaperlessBilling |   0 |
-| Contract         |   0 |
-| StreamingMovies  |   0 |
-| StreamingTV      |   0 |
-| TechSupport      |   0 |
-| OnlineBackup     |   0 |
 | gender           |   0 |
-| OnlineSecurity   |   0 |
-| InternetService  |   0 |
+| SeniorCitizen    |   0 |
+| Partner          |   0 |
+| customerID       |   0 |
+| Dependents       |   0 |
+| tenure           |   0 |
 | MultipleLines    |   0 |
 | PhoneService     |   0 |
-| tenure           |   0 |
-| Dependents       |   0 |
-| Partner          |   0 |
-| SeniorCitizen    |   0 |
+| OnlineSecurity   |   0 |
+| OnlineBackup     |   0 |
+| DeviceProtection |   0 |
+| InternetService  |   0 |
+| TechSupport      |   0 |
+| StreamingTV      |   0 |
+| Contract         |   0 |
+| StreamingMovies  |   0 |
+| PaperlessBilling |   0 |
+| PaymentMethod    |   0 |
+| MonthlyCharges   |   0 |
 | Churn            |   0 |
 
 Duplicados completos: 0
@@ -63,7 +63,7 @@ Duplicados completos: 0
 ## Estatisticas descritivas
 |                  |   count |   unique | top                     |   freq |      mean |       std |   min |     25% |      50% |       75% |    max |
 |:-----------------|--------:|---------:|:------------------------|-------:|----------:|----------:|------:|--------:|---------:|----------:|-------:|
-| customerID       |    4000 |     4000 | SYN-00000               |      1 |  nan      |  nan      |   nan |  nan    |  nan     |  nan      |  nan   |
+| customerID       |    4000 |     4000 | SYN-03983               |      1 |  nan      |  nan      |   nan |  nan    |  nan     |  nan      |  nan   |
 | gender           |    4000 |        2 | Male                    |   2015 |  nan      |  nan      |   nan |  nan    |  nan     |  nan      |  nan   |
 | SeniorCitizen    |    4000 |        2 | No                      |   3362 |  nan      |  nan      |   nan |  nan    |  nan     |  nan      |  nan   |
 | Partner          |    4000 |        2 | Yes                     |   2021 |  nan      |  nan      |   nan |  nan    |  nan     |  nan      |  nan   |

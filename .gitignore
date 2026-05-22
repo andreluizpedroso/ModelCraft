@@ -11,3 +11,5 @@ data/processed/*.csv
 models/*.joblib
 models/*.json
 reports/*.md.tmp
+.env
+catboost_info/
