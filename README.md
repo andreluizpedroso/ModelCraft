@@ -43,7 +43,8 @@ Principais variaveis:
 ├── images/
 ├── models/
 ├── notebooks/
-│   └── 01_end_to_end_churn_project.py
+│   ├── 01_end_to_end_churn_project.py   <- script com marcadores # %%
+│   └── 01_end_to_end_churn_project.ipynb <- notebook Jupyter interativo
 ├── reports/
 │   ├── model_card.md
 │   └── project_plan.md
@@ -78,12 +79,20 @@ Principais variaveis:
 
 ## Como executar
 
+### Pipeline completo (terminal)
+
 ```bash
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 python main.py
 ```
+
+### Notebook interativo (VS Code)
+
+1. Abra `notebooks/01_end_to_end_churn_project.ipynb` no VS Code.
+2. Clique em **Select Kernel** no canto superior direito e escolha `venv\Scripts\python.exe`.
+3. Use **Run Cell** (`Shift+Enter`) para executar celula a celula, ou **Run All** para rodar tudo.
 
 Saidas principais:
 
@@ -143,6 +152,28 @@ Execute `python main.py` para gerar as metricas reais do ambiente. O projeto cal
 - Average Precision
 - Matriz de confusao
 - Precision-Recall Curve
+
+### Resultados obtidos
+
+| Modelo | ROC-AUC (CV) | ROC-AUC (validacao) |
+|---|---|---|
+| **Logistic Regression** | **0.746** | **0.751** |
+| Random Forest | 0.720 | 0.735 |
+| CatBoost | 0.726 | 0.734 |
+| XGBoost | 0.715 | 0.727 |
+| HistGradientBoosting | 0.689 | 0.705 |
+| LightGBM | 0.693 | 0.700 |
+| Dummy Baseline | 0.500 | 0.500 |
+
+**Metricas finais no teste (modelo: Logistic Regression):**
+
+| Metrica | Valor |
+|---|---|
+| ROC-AUC | 0.736 |
+| F1-score | 0.655 |
+| Recall | 0.653 |
+| Precision | 0.657 |
+| Accuracy | 0.685 |
 
 ## Interpretabilidade
 
