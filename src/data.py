@@ -34,6 +34,7 @@ VARIABLE_DESCRIPTIONS = {
 
 def load_or_create_dataset(config: ProjectConfig) -> pd.DataFrame:
     """Carrega o dataset real e usa um fallback sintetico se a rede falhar."""
+    # Se o arquivo ja existe no disco, usa ele em vez de baixar novamente.
     if config.raw_data_path.exists():
         df = pd.read_csv(config.raw_data_path)
     else:
@@ -41,22 +42,30 @@ def load_or_create_dataset(config: ProjectConfig) -> pd.DataFrame:
             df = pd.read_csv(config.dataset_url)
             df.to_csv(config.raw_data_path, index=False)
         except Exception:
+            # Sem acesso a internet: gera dados sinteticos com estrutura identica ao dataset real.
             df = _create_synthetic_telco_data(config.random_state)
             df.to_csv(config.raw_data_path, index=False)
 
     df = clean_telco_data(df)
+    # Salva a versao limpa para que analises posteriores partam sempre do mesmo ponto.
     df.to_csv(config.processed_data_path, index=False)
     return df
 
 
 def clean_telco_data(df: pd.DataFrame) -> pd.DataFrame:
+    # copy() evita modificar o DataFrame original (boa pratica para evitar efeitos colaterais).
     df = df.copy()
+    # Remove espacos nos nomes das colunas, problema comum em CSVs exportados manualmente.
     df.columns = [col.strip() for col in df.columns]
 
     if "TotalCharges" in df.columns:
+        # No dataset original, TotalCharges pode vir como string (ex: " " para clientes novos).
+        # errors="coerce" converte strings invalidas para NaN em vez de lancar erro.
         df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
 
     if "SeniorCitizen" in df.columns:
+        # No dataset original, SeniorCitizen vem como 0/1. Convertemos para "No"/"Yes"
+        # para manter consistencia com as demais colunas binarias.
         df["SeniorCitizen"] = df["SeniorCitizen"].map({0: "No", 1: "Yes"}).fillna(df["SeniorCitizen"])
 
     return df
@@ -110,6 +119,8 @@ def _create_synthetic_telco_data(random_state: int, n_rows: int = 4000) -> pd.Da
     support = rng.choice(["Yes", "No"], n_rows, p=[0.35, 0.65])
     internet = rng.choice(["DSL", "Fiber optic", "No"], n_rows, p=[0.35, 0.45, 0.20])
 
+    # Score linear que simula os fatores de risco reais de churn em telecom:
+    # contrato mensal e sem suporte aumentam o risco; tempo longo como cliente diminui.
     churn_score = (
         1.1 * (contract == "Month-to-month")
         + 0.8 * (internet == "Fiber optic")
@@ -118,7 +129,9 @@ def _create_synthetic_telco_data(random_state: int, n_rows: int = 4000) -> pd.Da
         - 0.035 * tenure
         - 1.1
     )
+    # Sigmoide converte o score em probabilidade entre 0 e 1.
     churn_prob = 1 / (1 + np.exp(-churn_score))
+    # Sorteio binomial com a probabilidade calculada: simula o comportamento real do cliente.
     churn = rng.binomial(1, churn_prob)
 
     total = (monthly * tenure + rng.normal(0, 120, n_rows)).clip(0, None).round(2)

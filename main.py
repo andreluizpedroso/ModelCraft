@@ -8,8 +8,14 @@ candidato, avalia no teste e salva os artefatos finais.
 """
 
 import os
+import warnings
 
 os.environ.setdefault("LOKY_MAX_CPU_COUNT", "1")
+
+# Suprime warning de compatibilidade entre LightGBM e sklearn quando o ColumnTransformer
+# entrega numpy mas o LGBMClassifier foi ajustado com nomes de features.
+# Nao afeta resultado; e um problema conhecido de integracao entre as duas bibliotecas.
+warnings.filterwarnings("ignore", message=".*does not have valid feature names.*")
 
 from src.config import ProjectConfig
 from src.data import load_or_create_dataset, summarize_data

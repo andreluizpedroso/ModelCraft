@@ -17,6 +17,8 @@ def validate_no_obvious_leakage(
         if "customerID" in frame.columns:
             alerts.append(f"`customerID` apareceu em X_{name}; identificadores nao devem treinar o modelo.")
 
+    # Verifica se algum indice (linha) aparece em mais de um conjunto.
+    # Sobreposicao causaria otimismo falso nas metricas: o modelo seria avaliado em dados que ja viu.
     overlap_train_valid = len(set(X_train.index).intersection(set(X_valid.index)))
     overlap_train_test = len(set(X_train.index).intersection(set(X_test.index)))
     overlap_valid_test = len(set(X_valid.index).intersection(set(X_test.index)))

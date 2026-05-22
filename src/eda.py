@@ -9,9 +9,11 @@ from src.utils import write_text
 
 
 def run_eda(df: pd.DataFrame, config: ProjectConfig) -> None:
+    """EDA (Exploratory Data Analysis): analise visual para entender os dados antes de modelar."""
     sns.set_theme(style="whitegrid", context="notebook")
 
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
+    # Exclui customerID (identificador sem valor preditivo) e o target (nao e uma feature).
     categorical_cols = [
         col for col in df.select_dtypes(exclude="number").columns if col not in ["customerID", config.target_column]
     ]
@@ -47,10 +49,13 @@ def _plot_target_distribution(df: pd.DataFrame, config: ProjectConfig) -> None:
 def _plot_numeric_distributions(df: pd.DataFrame, numeric_cols: list[str], config: ProjectConfig) -> None:
     if not numeric_cols:
         return
+    # Cria uma grade com 2 graficos por variavel: histograma (distribuicao) e boxplot (outliers).
     fig, axes = plt.subplots(len(numeric_cols), 2, figsize=(12, 4 * len(numeric_cols)))
+    # Quando ha apenas uma variavel, subplots retorna um array 1D; normalizamos para 2D.
     if len(numeric_cols) == 1:
         axes = [axes]
     for row, col in zip(axes, numeric_cols):
+        # kde=True adiciona uma curva suavizada sobre o histograma para ver a forma da distribuicao.
         sns.histplot(data=df, x=col, hue=config.target_column, kde=True, ax=row[0], palette="Set2")
         row[0].set_title(f"Distribuicao de {col}")
         sns.boxplot(
@@ -81,6 +86,8 @@ def _plot_correlation_heatmap(df: pd.DataFrame, numeric_cols: list[str], config:
 
 
 def _plot_key_categorical_patterns(df: pd.DataFrame, categorical_cols: list[str], config: ProjectConfig) -> None:
+    # Seleciona apenas as variaveis categoricas mais relevantes para churn em telecom.
+    # Plotar todas as categoricas geraria um grafico enorme e pouco legivel.
     selected = [col for col in ["Contract", "InternetService", "PaymentMethod", "TechSupport"] if col in categorical_cols]
     if not selected:
         return
@@ -88,6 +95,8 @@ def _plot_key_categorical_patterns(df: pd.DataFrame, categorical_cols: list[str]
     if len(selected) == 1:
         axes = [axes]
     for ax, col in zip(axes, selected):
+        # Calcula a taxa de churn (proporcao de "Yes") para cada categoria da variavel.
+        # assign cria uma coluna temporaria binaria (1=churn, 0=nao churn) para calcular a media.
         rates = (
             df.assign(churn_binary=(df[config.target_column] == config.positive_label).astype(int))
             .groupby(col, observed=False)["churn_binary"]

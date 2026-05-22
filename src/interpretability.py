@@ -21,6 +21,8 @@ def create_interpretability_report(
     feature_names = model.named_steps["preprocessor"].get_feature_names_out()
     model_step = model.named_steps["model"]
 
+    # Tenta primeiro a importancia nativa do modelo (mais rapida).
+    # Se o modelo nao tiver esse atributo (ex: SVM), usa permutation importance como fallback.
     importance = _model_importance(model_step, feature_names)
     if importance is None:
         importance = _permutation_importance(model, X_test, y_test, config)
@@ -107,8 +109,11 @@ def _try_shap_report(
 
         preprocessor = model.named_steps["preprocessor"]
         model_step = model.named_steps["model"]
+        # SHAP e caro computacionalmente; amostras menores reduzem o tempo sem perder representatividade.
         X_train_sample = X_train.sample(min(300, len(X_train)), random_state=config.random_state)
         X_test_sample = X_test.sample(min(200, len(X_test)), random_state=config.random_state)
+        # SHAP precisa dos dados ja transformados (numericos normalizados, categoricos em one-hot),
+        # entao aplicamos apenas o preprocessor sem o modelo.
         X_train_transformed = preprocessor.transform(X_train_sample)
         X_test_transformed = preprocessor.transform(X_test_sample)
 

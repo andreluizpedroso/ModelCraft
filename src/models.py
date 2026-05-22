@@ -47,14 +47,20 @@ def run_model_selection(
     rows = []
     fitted: dict[str, Pipeline] = {}
 
+    # StratifiedKFold mantem a proporcao de churn em cada fold, evitando folds sem exemplos positivos.
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=config.random_state)
     scoring = {"roc_auc": "roc_auc", "f1": "f1", "recall": "recall", "avg_precision": "average_precision"}
 
     for name, estimator in candidates.items():
+        # clone(preprocessor) cria uma copia nao ajustada para cada modelo,
+        # garantindo que o fit de um nao contamine o outro.
         pipe = Pipeline([("preprocessor", clone(preprocessor)), ("model", estimator)])
+        # return_train_score=True permite calcular o overfit_gap: diferenca entre desempenho
+        # no treino e na validacao cruzada. Gap alto indica que o modelo memorizou os dados.
         cv_scores = cross_validate(pipe, X_train, y_train, cv=cv, scoring=scoring, n_jobs=1, return_train_score=True)
         pipe.fit(X_train, y_train)
         valid_proba = _predict_proba(pipe, X_valid)
+        # Limiar 0.50 e apenas o padrao para comparacao inicial; em producao deve ser calibrado.
         valid_pred = (valid_proba >= 0.50).astype(int)
         fitted[name] = pipe
 
@@ -68,6 +74,8 @@ def run_model_selection(
                 "valid_average_precision": average_precision_score(y_valid, valid_proba),
                 "valid_recall": recall_score(y_valid, valid_pred),
                 "valid_f1": f1_score(y_valid, valid_pred),
+                # overfit_gap mede o quanto o modelo foi melhor no treino do que na validacao.
+                # Valores altos (ex: Random Forest com gap > 0.25) indicam overfitting.
                 "overfit_gap_auc": np.mean(cv_scores["train_roc_auc"]) - np.mean(cv_scores["test_roc_auc"]),
             }
         )
@@ -92,6 +100,8 @@ def tune_best_model(
     pipe = Pipeline([("preprocessor", clone(preprocessor)), ("model", estimator)])
     param_distributions = _param_distributions(best_model_name)
 
+    # RandomizedSearchCV testa combinacoes aleatorias de hiperparametros em vez de todas (GridSearch).
+    # n_iter=20 significa que testa no maximo 20 combinacoes, o que e mais rapido sem perder muito.
     search = RandomizedSearchCV(
         estimator=pipe,
         param_distributions=param_distributions,
@@ -118,7 +128,11 @@ def tune_best_model(
 
 def _candidate_models(random_state: int) -> dict[str, BaseEstimator]:
     models: dict[str, BaseEstimator] = {
+        # DummyClassifier e o baseline: sempre chuta a classe mais frequente.
+        # Qualquer modelo real precisa superar esse resultado para justificar sua complexidade.
         "dummy_baseline": DummyClassifier(strategy="prior"),
+        # class_weight="balanced" ajusta os pesos internos para compensar o desbalanceamento de classes.
+        # Sem isso, o modelo tenderia a ignorar a classe minoritaria (churn=1).
         "logistic_regression": LogisticRegression(max_iter=2000, class_weight="balanced", random_state=random_state),
         "random_forest": RandomForestClassifier(
             n_estimators=300,
@@ -228,7 +242,9 @@ def _search_space_size(space: dict[str, list[Any]]) -> int:
 
 
 def _predict_proba(model: Pipeline, X: pd.DataFrame) -> np.ndarray:
+    # predict_proba retorna [[prob_0, prob_1], ...]; pegamos [:, 1] para a probabilidade de churn.
     if hasattr(model, "predict_proba"):
         return model.predict_proba(X)[:, 1]
+    # Alguns modelos so expoe decision_function; aplicamos a sigmoide para converter para [0, 1].
     decision = model.decision_function(X)
     return 1 / (1 + np.exp(-decision))

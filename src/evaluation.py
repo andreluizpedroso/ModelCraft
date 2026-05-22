@@ -25,6 +25,8 @@ from src.utils import save_json, write_text
 
 def evaluate_on_test(model: Pipeline, X_test: pd.DataFrame, y_test: pd.Series, config: ProjectConfig) -> dict[str, float]:
     probabilities = model.predict_proba(X_test)[:, 1]
+    # Limiar 0.50 e usado apenas para calcular metricas baseadas em classe (precision, recall, f1).
+    # ROC-AUC e average_precision nao dependem de limiar: avaliam o ranking das probabilidades.
     predictions = (probabilities >= 0.50).astype(int)
 
     metrics = {
